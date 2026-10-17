@@ -1,0 +1,26 @@
+---
+description: Protect the 3-layer advisor pipeline architecture (FR-7.1)
+globs: backend/src/main/java/com/artha/advisor/**/*.java
+alwaysApply: false
+---
+
+# Advisor Pipeline Architecture (FR-7.1)
+
+## The 3 Layers — Never Bypass
+```
+Layer 1: Deterministic Calculations (engines/services)  → numeric facts
+Layer 2: Rule Engine (advisor/rules/*)                  → flags + recommendations
+Layer 3: AI Explanation (advisor/ai/AiExplainerService)  → plain-English summary
+```
+
+## Priority Order (fixed, from spec)
+1. Goal Adequacy  2. Emergency Fund  3. Debt Management  4. Insurance Gaps
+5. Asset Allocation  6. Contribution Adequacy  7. Investment Selection  8. Tax Optimization
+
+## Rules
+- New rules MUST implement the `Rule` interface with a unique priority number
+- Rules MUST be stateless — all data comes from `HouseholdFinancialContext`
+- Context is built ONCE per advisor run — rules never query the DB directly
+- AI layer (Layer 3) SHALL NOT invent calculations or contradict Layer 1 (NFR-5.2)
+- If all rules pass → advisor says "do nothing" (empty results list)
+- Recommendations are persisted with specVersion for auditability (NFR-7.3)

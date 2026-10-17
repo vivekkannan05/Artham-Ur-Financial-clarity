@@ -1,0 +1,23 @@
+---
+description: Transaction immutability — no UPDATE/DELETE on financial transactions (FR-3.4)
+globs: backend/**/*.java
+alwaysApply: false
+---
+
+# Transaction Immutability (FR-3.4)
+
+Financial transactions are **append-only**. Once recorded, they cannot be modified or deleted.
+
+## Rules
+- Transaction entity: POST + GET only. No PUT, no DELETE endpoints.
+- Corrections use `TransactionCorrection` entity (links to original).
+- Holdings reach zero units → status = CLOSED. Transactions remain for XIRR history.
+- Net worth snapshots are append-only (one per day, immutable once created).
+
+## Why?
+Financial audit trail. If a transaction is wrong, record a correction — don't silently change history. This is how banks and brokerages work.
+
+## If someone asks to add UPDATE/DELETE for transactions:
+- Explain the immutability design decision
+- Offer the correction pattern instead
+- If they insist, require explicit acknowledgment that audit trail is broken

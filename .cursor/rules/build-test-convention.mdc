@@ -1,0 +1,26 @@
+---
+description: Build and test requirements before every commit
+alwaysApply: true
+---
+
+# Build & Test Convention
+
+## Before Every Commit
+1. Set JAVA_HOME: `export JAVA_HOME=/Users/vkannan/Library/Java/JavaVirtualMachines/ms-21.0.8/Contents/Home`
+2. Run: `cd backend && ./mvnw clean test -B`
+3. ALL tests must pass — never commit with failures
+4. Check for spec drift on any config/constant change
+
+## Java Environment
+- Java 21 LTS (Microsoft OpenJDK) — NOT Homebrew Java 24 (causes SSL issues)
+- Maven 3.9.9 via Maven Wrapper (./mvnw)
+- Test DB: H2 in-memory (application-test.yml, Flyway disabled)
+
+## Test Location
+- Unit tests: `backend/src/test/java/com/artha/unit/`
+- Integration tests: `backend/src/test/java/com/artha/integration/` (Testcontainers)
+- Test naming: `{Subject}Test.java` (e.g., `CashFlowServiceTest.java`)
+
+## Frontend (when Node.js is available)
+- `cd frontend && npm run build` — TypeScript compilation must pass
+- `cd frontend && npm test` — Vitest tests must pass

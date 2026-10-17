@@ -1,0 +1,38 @@
+---
+description: Module and package boundaries for Artha project
+alwaysApply: true
+---
+
+# Module Boundaries
+
+## Project Structure
+```
+financialAPPcursor/
+  backend/    — Spring Boot API (Java 21, Maven)
+  frontend/   — React 19 + TypeScript + Vite
+  docs/       — Spec, Design Doc, SDLC state (READ-ONLY during build)
+```
+
+## Backend Package Layout
+```
+com.artha
+  ├── config/       — Spring configuration classes
+  ├── domain/       — JPA entities + enums
+  ├── repository/   — Spring Data JPA repositories
+  ├── dto/          — Java records for request/response
+  ├── service/      — Business logic services
+  ├── engine/       — Stateless calculation engines
+  ├── advisor/      — Rule interface + implementations
+  │   ├── rules/    — Individual rule classes
+  │   └── ai/       — AI explainer service
+  ├── controller/   — REST controllers
+  └── import_/      — CSV/CAS import services
+```
+
+## Rules
+- **Controllers** call **Services** only (never Repositories directly)
+- **Services** call **Repositories** and **Engines**
+- **Engines** are pure static/stateless — no Spring dependencies, no DB access
+- **DTOs** are Java records — never entities in API responses
+- **Never modify `docs/SPEC-v1.md`** without explicit user approval
+- **Database migrations** go in `backend/src/main/resources/db/migration/V{N}__*.sql`

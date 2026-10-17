@@ -1,0 +1,27 @@
+---
+description: Java coding standards for Artha — teaching-quality, no Lombok, explicit code
+globs: backend/**/*.java
+alwaysApply: false
+---
+
+# Java Coding Standards
+
+## Teaching-Quality Code
+This is a learning project. Every file must be understandable by someone learning architecture.
+
+- **No Lombok** — write explicit getters/setters. The user is learning Java patterns.
+- **Java 21 Records** for DTOs — immutable, auto-generated methods.
+- **Entities** use classes (not records) because JPA needs mutable state.
+- **Comment every non-obvious design decision** with SPEC REF or WHY blocks.
+
+## Patterns
+- **No unnecessary interfaces** — if there's only one implementation, use a class.
+- **Constructor injection** — no `@Autowired` on fields.
+- **`@Service`, `@Repository`, `@Component`** — always annotate Spring beans.
+- **`@Transactional(readOnly = true)`** on read-only service classes.
+
+## Forbidden
+- No `float`/`double` for money (see bigdecimal-precision rule)
+- No `System.out.println` — use SLF4J logger
+- No wildcard imports (`import java.util.*`)
+- No abbreviations in names (`txn` is OK for transactions, but not `amt` for amount)

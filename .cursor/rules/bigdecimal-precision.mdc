@@ -1,0 +1,27 @@
+---
+description: BigDecimal precision rules for financial calculations (NFR-1.1, NFR-1.2)
+globs: backend/**/*.java
+alwaysApply: false
+---
+
+# Financial Math — BigDecimal Only
+
+All financial calculations MUST use `BigDecimal`. No `double` or `float` for money.
+
+## SPEC-BINDING Values (NFR-1.2)
+- CURRENCY_SCALE = 2, RATE_SCALE = 6
+- Rounding = ROUND_HALF_UP (RoundingMode.HALF_UP)
+
+## Rules
+
+- ❌ `double amount = 100.50;`
+- ✅ `BigDecimal amount = new BigDecimal("100.50");`
+
+- ❌ `new BigDecimal(0.1)` — creates 0.1000000000000000055511...
+- ✅ `new BigDecimal("0.1")` — exact
+
+- ❌ `a.divide(b)` — throws ArithmeticException on non-terminating decimals
+- ✅ `a.divide(b, 2, RoundingMode.HALF_UP)`
+
+- Never compare with `==`. Use `.compareTo(BigDecimal.ZERO) > 0`
+- Currency display: `.toPlainString()` not `.toString()` (avoids scientific notation)

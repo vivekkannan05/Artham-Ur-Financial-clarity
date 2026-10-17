@@ -1,0 +1,26 @@
+---
+description: React + TypeScript standards for Artha frontend
+globs: frontend/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# Frontend Standards
+
+## Stack
+- React 19 + TypeScript 5.x + Vite
+- react-router-dom for routing
+- recharts for charts (no D3 directly)
+- No CSS framework — hand-crafted CSS in index.css
+
+## Patterns
+- All API calls go through `src/api/client.ts` — never call fetch directly in components
+- Use `useFetch<T>` hook for data loading with loading/error states
+- TypeScript interfaces in `src/types/index.ts` must match backend Java DTOs
+- Pages go in `src/pages/`, shared components in `src/components/`
+- Format currency with `formatCurrency()` from Shared.tsx (INR, ₹ symbol)
+
+## Rules
+- No `any` type unless wrapping an untyped API response
+- No inline styles — use CSS classes from index.css
+- All numbers from the backend are monetary — display with formatCurrency()
+- Frontend does NO financial calculations — all math happens on the backend

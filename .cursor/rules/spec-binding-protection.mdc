@@ -1,0 +1,25 @@
+---
+description: Protect SPEC-BINDING values — config constants that must match the spec
+alwaysApply: true
+---
+
+# SPEC-BINDING Values
+
+These values are documented in SPEC-v1.md with `<!-- SPEC-BINDING -->` markers.
+Changing them in code without updating the spec causes drift.
+
+## Current SPEC-BINDING Values
+| ID | Value | Where in Code |
+|---|---|---|
+| NFR-1.2 | CURRENCY_SCALE=2, RATE_SCALE=6 | BigDecimal operations |
+| FR-5.2 | EMERGENCY_FUND_TARGET_MONTHS=6 | ArthaProperties, EmergencyFundCalculator |
+| FR-6.1 | EPF_TAX_THRESHOLD=250000 | TaxService.EPF_TAX_THRESHOLD |
+| FR-7.7 | STALE_DATA_THRESHOLD_DAYS=90 | StaleDataService.STALE_THRESHOLD_DAYS |
+| NFR-8.2 | CORS_ALLOWED_ORIGINS=http://localhost:3000 | application.yml, WebConfig |
+
+## Rule
+Before changing ANY of these values:
+1. Check `docs/SPEC-v1.md` for the documented value
+2. If the change is intentional → update the spec FIRST, then the code
+3. Add an entry to the Spec Change Log in the spec file
+4. Never leave code and spec out of sync
