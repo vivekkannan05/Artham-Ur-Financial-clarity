@@ -24,10 +24,10 @@ export interface Person {
 // ─── Cash Flow ───────────────────────────────────────────
 export interface CashFlowStatement {
   householdId: string;
-  totalIncome: number;
+  grossIncome: number;
+  consumptionExpenses: number;
+  investmentOutflows: number;
   totalExpenses: number;
-  totalEmi: number;
-  totalSip: number;
   freeCashFlow: number;
   savingsRate: number;
   debtServiceRatio: number;
@@ -37,11 +37,15 @@ export interface CashFlowStatement {
 export interface Goal {
   id: string;
   name: string;
-  targetAmount: number;
+  goalType: string;
+  targetAmountToday: number;
   targetDate: string;
-  priority: number;
+  priority: string;
   status: 'ACTIVE' | 'ACHIEVED' | 'ABANDONED';
-  notes?: string;
+  inflationRate: number;
+  expectedReturnRate: number;
+  sipStepUpPct?: number;
+  fundingPercentage?: number;
 }
 
 export interface GoalProjection {
@@ -67,10 +71,18 @@ export interface Account {
 export interface Holding {
   id: string;
   name: string;
+  accountId: string;
+  ownerId: string;
   instrumentTypeCode: string;
+  instrumentTypeName: string;
+  assetClass: string;
+  units: number;
+  acquisitionCostTotal: number;
+  acquisitionCostPerUnit: number;
+  acquisitionDate: string;
   currentValue: number;
-  investedValue: number;
-  units?: number;
+  valuationDate: string;
+  currency: string;
   status: 'ACTIVE' | 'CLOSED';
 }
 

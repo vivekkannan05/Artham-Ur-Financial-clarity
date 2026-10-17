@@ -1,5 +1,5 @@
-import { useFetch } from '../hooks/useFetch';
-import { households, cashFlow, netWorth, advisor, goals } from '../api/client';
+import { useFetch, useHouseholdId } from '../hooks/useFetch';
+import { cashFlow, netWorth, advisor, goals } from '../api/client';
 import { StatCard, ProgressBar, Section, SeverityBadge, LoadingSpinner, ErrorMessage, formatCurrency, formatPercent } from '../components/Shared';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import type { HealthScore, CashFlowStatement, NetWorthResponse, GoalProjection, RuleResult } from '../types';
@@ -11,18 +11,6 @@ import type { HealthScore, CashFlowStatement, NetWorthResponse, GoalProjection, 
  * asset allocation pie chart, emergency fund, top 3 advisor actions.
  */
 const COLORS = ['#3b82f6', '#22c55e', '#eab308', '#ef4444', '#8b5cf6', '#f97316'];
-
-// For Phase 1: use the first household found
-const HOUSEHOLD_ID_KEY = 'artha_household_id';
-
-function useHouseholdId() {
-  const { data } = useFetch(() => households.list(), []);
-  if (data && data.length > 0) {
-    localStorage.setItem(HOUSEHOLD_ID_KEY, data[0].id);
-    return data[0].id as string;
-  }
-  return localStorage.getItem(HOUSEHOLD_ID_KEY) ?? '';
-}
 
 export default function Dashboard() {
   const householdId = useHouseholdId();
@@ -57,7 +45,7 @@ export default function Dashboard() {
         )}
         {cf.data && (
           <>
-            <StatCard label="Monthly Income" value={formatCurrency(cf.data.totalIncome)} />
+            <StatCard label="Monthly Income" value={formatCurrency(cf.data.grossIncome)} />
             <StatCard label="Free Cash Flow" value={formatCurrency(cf.data.freeCashFlow)}
               status={cf.data.freeCashFlow > 0 ? 'green' : 'red'} />
             <StatCard label="Savings Rate" value={formatPercent(cf.data.savingsRate)}
@@ -113,7 +101,7 @@ export default function Dashboard() {
         <Section title="Goal Progress">
           {gl.data.map((g: any) => (
             <ProgressBar key={g.id} percent={g.fundingPercentage ?? 0}
-              label={`${g.name} — ${formatCurrency(g.targetAmount)}`} />
+              label={`${g.name} — ${formatCurrency(g.targetAmountToday)}`} />
           ))}
         </Section>
       )}

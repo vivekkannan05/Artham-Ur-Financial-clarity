@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import { useHouseholdId } from '../hooks/useFetch';
 import { importApi } from '../api/client';
 import { Section, LoadingSpinner } from '../components/Shared';
 
@@ -7,7 +8,7 @@ import { Section, LoadingSpinner } from '../components/Shared';
  * Flow: Upload → Preview → Commit.
  */
 export default function ImportPage() {
-  const householdId = localStorage.getItem('artha_household_id') ?? '';
+  const householdId = useHouseholdId();
   const fileRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<any>(null);
   const [loading, setLoading] = useState(false);

@@ -1,4 +1,4 @@
-import { useFetch } from '../hooks/useFetch';
+import { useFetch, useHouseholdId } from '../hooks/useFetch';
 import { goals } from '../api/client';
 import { ProgressBar, Section, LoadingSpinner, ErrorMessage, formatCurrency } from '../components/Shared';
 import type { Goal } from '../types';
@@ -8,10 +8,12 @@ import type { Goal } from '../types';
  * Clicking a goal shows projection details.
  */
 export default function GoalsPage() {
-  const householdId = localStorage.getItem('artha_household_id') ?? '';
+  const householdId = useHouseholdId();
   const { data, loading, error } = useFetch<Goal[]>(
-    () => goals.list(householdId), [householdId]);
+    () => householdId ? goals.list(householdId) : Promise.resolve([]),
+    [householdId]);
 
+  if (!householdId) return <div className="page"><h2>No household found. Create one to get started.</h2></div>;
   if (loading) return <LoadingSpinner />;
   if (error) return <ErrorMessage message={error} />;
 
@@ -23,7 +25,7 @@ export default function GoalsPage() {
         <Section key={g.id} title={g.name}>
           <div className="goal-detail">
             <div className="goal-row">
-              <span>Target: {formatCurrency(g.targetAmount)}</span>
+              <span>Target: {formatCurrency(g.targetAmountToday)}</span>
               <span>Target Date: {g.targetDate}</span>
               <span>Priority: {g.priority}</span>
               <span className={`status-badge ${g.status.toLowerCase()}`}>{g.status}</span>

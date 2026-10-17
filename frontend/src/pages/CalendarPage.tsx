@@ -1,4 +1,4 @@
-import { useFetch } from '../hooks/useFetch';
+import { useFetch, useHouseholdId } from '../hooks/useFetch';
 import { calendar } from '../api/client';
 import { Section, LoadingSpinner, ErrorMessage } from '../components/Shared';
 import type { CalendarEvent } from '../types';
@@ -7,9 +7,12 @@ import type { CalendarEvent } from '../types';
  * Calendar Page — UX-1.7: Financial calendar with events.
  */
 export default function CalendarPage() {
-  const householdId = localStorage.getItem('artha_household_id') ?? '';
+  const householdId = useHouseholdId();
   const { data, loading, error } = useFetch<CalendarEvent[]>(
-    () => calendar.list(householdId), [householdId]);
+    () => householdId ? calendar.list(householdId) : Promise.resolve([]),
+    [householdId]);
+
+  if (!householdId) return <div className="page"><h2>No household found. Create one to get started.</h2></div>;
 
   const handleAutoPopulate = async () => {
     await calendar.autoPopulate(householdId);

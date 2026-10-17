@@ -1,4 +1,4 @@
-import { useFetch } from '../hooks/useFetch';
+import { useFetch, useHouseholdId } from '../hooks/useFetch';
 import { advisor } from '../api/client';
 import { Section, SeverityBadge, LoadingSpinner, ErrorMessage } from '../components/Shared';
 import type { HealthScore, RuleResult } from '../types';
@@ -8,12 +8,15 @@ import type { HealthScore, RuleResult } from '../types';
  * Shows recommendations as action cards with accept/reject/defer.
  */
 export default function AdvisorPage() {
-  const householdId = localStorage.getItem('artha_household_id') ?? '';
+  const householdId = useHouseholdId();
   const recs = useFetch<RuleResult[]>(
-    () => advisor.advise(householdId), [householdId]);
+    () => householdId ? advisor.advise(householdId) : Promise.resolve([]),
+    [householdId]);
   const hs = useFetch<HealthScore>(
-    () => advisor.healthScore(householdId), [householdId]);
+    () => householdId ? advisor.healthScore(householdId) : Promise.resolve({} as HealthScore),
+    [householdId]);
 
+  if (!householdId) return <div className="page"><h2>No household found. Create one to get started.</h2></div>;
   if (recs.loading) return <LoadingSpinner />;
   if (recs.error) return <ErrorMessage message={recs.error} />;
 

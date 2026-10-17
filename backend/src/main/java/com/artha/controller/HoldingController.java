@@ -39,6 +39,12 @@ public class HoldingController {
         return ResponseEntity.ok(holdingService.findByAccountId(accountId));
     }
 
+    /** All holdings across all members of a household — used by the portfolio page. */
+    @GetMapping("/api/households/{householdId}/holdings")
+    public ResponseEntity<List<HoldingResponse>> findByHousehold(@PathVariable UUID householdId) {
+        return ResponseEntity.ok(holdingService.findByHouseholdId(householdId));
+    }
+
     @GetMapping("/api/holdings/{id}")
     public ResponseEntity<HoldingResponse> findById(@PathVariable UUID id) {
         return ResponseEntity.ok(holdingService.findById(id));

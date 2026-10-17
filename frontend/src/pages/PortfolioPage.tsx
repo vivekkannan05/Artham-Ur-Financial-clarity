@@ -1,4 +1,4 @@
-import { useFetch } from '../hooks/useFetch';
+import { useFetch, useHouseholdId } from '../hooks/useFetch';
 import { holdings } from '../api/client';
 import { Section, LoadingSpinner, ErrorMessage, formatCurrency } from '../components/Shared';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
@@ -9,10 +9,12 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 const COLORS = ['#3b82f6', '#22c55e', '#eab308', '#ef4444', '#8b5cf6', '#f97316', '#06b6d4'];
 
 export default function PortfolioPage() {
-  const householdId = localStorage.getItem('artha_household_id') ?? '';
+  const householdId = useHouseholdId();
   const { data, loading, error } = useFetch<any[]>(
-    () => holdings.list(householdId), [householdId]);
+    () => householdId ? holdings.list(householdId) : Promise.resolve([]),
+    [householdId]);
 
+  if (!householdId) return <div className="page"><h2>No household found. Create one to get started.</h2></div>;
   if (loading) return <LoadingSpinner />;
   if (error) return <ErrorMessage message={error} />;
 
@@ -55,7 +57,7 @@ export default function PortfolioPage() {
                 <td>{h.name}</td>
                 <td>{h.instrumentTypeCode}</td>
                 <td>{formatCurrency(h.currentValue ?? 0)}</td>
-                <td>{formatCurrency(h.investedValue ?? 0)}</td>
+                <td>{formatCurrency(h.acquisitionCostTotal ?? 0)}</td>
                 <td className={h.status === 'ACTIVE' ? 'status-green' : 'status-grey'}>{h.status}</td>
               </tr>
             ))}

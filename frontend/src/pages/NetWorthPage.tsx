@@ -1,4 +1,4 @@
-import { useFetch } from '../hooks/useFetch';
+import { useFetch, useHouseholdId } from '../hooks/useFetch';
 import { netWorth } from '../api/client';
 import { StatCard, Section, LoadingSpinner, ErrorMessage, formatCurrency } from '../components/Shared';
 import type { NetWorthResponse, EmergencyFundStatus } from '../types';
@@ -7,12 +7,15 @@ import type { NetWorthResponse, EmergencyFundStatus } from '../types';
  * Net Worth Page — Assets, liabilities, and emergency fund status.
  */
 export default function NetWorthPage() {
-  const householdId = localStorage.getItem('artha_household_id') ?? '';
+  const householdId = useHouseholdId();
   const nw = useFetch<NetWorthResponse>(
-    () => netWorth.current(householdId), [householdId]);
+    () => householdId ? netWorth.current(householdId) : Promise.resolve({} as NetWorthResponse),
+    [householdId]);
   const ef = useFetch<EmergencyFundStatus>(
-    () => netWorth.emergencyFund(householdId), [householdId]);
+    () => householdId ? netWorth.emergencyFund(householdId) : Promise.resolve({} as EmergencyFundStatus),
+    [householdId]);
 
+  if (!householdId) return <div className="page"><h2>No household found. Create one to get started.</h2></div>;
   if (nw.loading) return <LoadingSpinner />;
   if (nw.error) return <ErrorMessage message={nw.error} />;
 

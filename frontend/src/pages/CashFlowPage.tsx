@@ -1,4 +1,4 @@
-import { useFetch } from '../hooks/useFetch';
+import { useFetch, useHouseholdId } from '../hooks/useFetch';
 import { cashFlow } from '../api/client';
 import { StatCard, Section, LoadingSpinner, ErrorMessage, formatCurrency, formatPercent } from '../components/Shared';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
@@ -8,19 +8,20 @@ import type { CashFlowStatement } from '../types';
  * Cash Flow Page — Monthly income vs expenses breakdown.
  */
 export default function CashFlowPage() {
-  const householdId = localStorage.getItem('artha_household_id') ?? '';
+  const householdId = useHouseholdId();
   const { data, loading, error } = useFetch<CashFlowStatement>(
-    () => cashFlow.get(householdId), [householdId]);
+    () => householdId ? cashFlow.get(householdId) : Promise.resolve({} as CashFlowStatement),
+    [householdId]);
 
+  if (!householdId) return <div className="page"><h2>No household found. Create one to get started.</h2></div>;
   if (loading) return <LoadingSpinner />;
   if (error) return <ErrorMessage message={error} />;
   if (!data) return null;
 
   const chartData = [
-    { name: 'Income', amount: data.totalIncome },
-    { name: 'Expenses', amount: data.totalExpenses },
-    { name: 'EMIs', amount: data.totalEmi },
-    { name: 'SIPs', amount: data.totalSip },
+    { name: 'Income', amount: data.grossIncome },
+    { name: 'Consumption', amount: data.consumptionExpenses },
+    { name: 'Investments', amount: data.investmentOutflows },
     { name: 'Free Cash', amount: data.freeCashFlow },
   ];
 
@@ -29,10 +30,10 @@ export default function CashFlowPage() {
       <h1>Cash Flow</h1>
 
       <div className="stats-grid">
-        <StatCard label="Total Income" value={formatCurrency(data.totalIncome)} />
+        <StatCard label="Gross Income" value={formatCurrency(data.grossIncome)} />
+        <StatCard label="Consumption" value={formatCurrency(data.consumptionExpenses)} />
+        <StatCard label="Investment Outflows" value={formatCurrency(data.investmentOutflows)} />
         <StatCard label="Total Expenses" value={formatCurrency(data.totalExpenses)} />
-        <StatCard label="EMI Payments" value={formatCurrency(data.totalEmi)} />
-        <StatCard label="SIP Investments" value={formatCurrency(data.totalSip)} />
         <StatCard label="Free Cash Flow" value={formatCurrency(data.freeCashFlow)}
           status={data.freeCashFlow > 0 ? 'green' : 'red'} />
         <StatCard label="Savings Rate" value={formatPercent(data.savingsRate)}

@@ -81,6 +81,16 @@ public class HoldingService {
                 .map(this::toResponse).toList();
     }
 
+    /**
+     * Find all holdings belonging to any member of a household.
+     * Used by the dashboard and portfolio page which operate at household level.
+     */
+    @Transactional(readOnly = true)
+    public List<HoldingResponse> findByHouseholdId(UUID householdId) {
+        return holdingRepository.findByOwnerHouseholdId(householdId).stream()
+                .map(this::toResponse).toList();
+    }
+
     public HoldingResponse update(UUID id, HoldingRequest request) {
         Holding holding = holdingRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Holding not found: " + id));

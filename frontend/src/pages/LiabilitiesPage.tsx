@@ -1,4 +1,4 @@
-import { useFetch } from '../hooks/useFetch';
+import { useFetch, useHouseholdId } from '../hooks/useFetch';
 import { liabilities } from '../api/client';
 import { Section, LoadingSpinner, ErrorMessage, formatCurrency } from '../components/Shared';
 import type { Liability } from '../types';
@@ -7,10 +7,12 @@ import type { Liability } from '../types';
  * Liabilities Page — All debts with status and EMI breakdown.
  */
 export default function LiabilitiesPage() {
-  const householdId = localStorage.getItem('artha_household_id') ?? '';
+  const householdId = useHouseholdId();
   const { data, loading, error } = useFetch<Liability[]>(
-    () => liabilities.list(householdId), [householdId]);
+    () => householdId ? liabilities.list(householdId) : Promise.resolve([]),
+    [householdId]);
 
+  if (!householdId) return <div className="page"><h2>No household found. Create one to get started.</h2></div>;
   if (loading) return <LoadingSpinner />;
   if (error) return <ErrorMessage message={error} />;
 
