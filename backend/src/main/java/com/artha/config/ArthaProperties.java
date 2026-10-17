@@ -32,6 +32,9 @@ public class ArthaProperties {
     /** Stale data threshold in days (per NFR-2.2: 90 days) */
     private int staleDataThresholdDays = 90;
 
+    /** Emergency fund target in months (per FR-5.2, SPEC-BINDING: EMERGENCY_FUND_MONTHS=6) */
+    private int emergencyFundMonths = 6;
+
     private Cors cors = new Cors();
     private Pan pan = new Pan();
 
@@ -61,6 +64,9 @@ public class ArthaProperties {
 
     public int getStaleDataThresholdDays() { return staleDataThresholdDays; }
     public void setStaleDataThresholdDays(int staleDataThresholdDays) { this.staleDataThresholdDays = staleDataThresholdDays; }
+
+    public int getEmergencyFundMonths() { return emergencyFundMonths; }
+    public void setEmergencyFundMonths(int emergencyFundMonths) { this.emergencyFundMonths = emergencyFundMonths; }
 
     public Cors getCors() { return cors; }
     public void setCors(Cors cors) { this.cors = cors; }

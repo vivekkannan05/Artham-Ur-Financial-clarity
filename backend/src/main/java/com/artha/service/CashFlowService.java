@@ -9,6 +9,9 @@ import com.artha.dto.CashFlowStatement;
 import com.artha.repository.ExpenseRepository;
 import com.artha.repository.HouseholdRepository;
 import com.artha.repository.IncomeRepository;
+import com.artha.repository.LiabilityRepository;
+import com.artha.domain.Liability;
+import com.artha.domain.LiabilityStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
@@ -37,7 +40,7 @@ import java.util.UUID;
  *      - totalExpenses = consumptionExpenses + investmentOutflows
  *      - freeCashFlow = grossIncome - totalExpenses
  *      - savingsRate = (freeCashFlow / grossIncome) * 100
- *      - debtServiceRatio = 0 (EMIs come in Batch 4)
+ *      - debtServiceRatio = totalActiveEMIs / grossIncome * 100
  *
  * WHY NORMALIZE TO MONTHLY?
  *   Incomes and expenses can have different frequencies (annual salary,
@@ -56,15 +59,18 @@ public class CashFlowService {
     private final IncomeRepository incomeRepository;
     private final ExpenseRepository expenseRepository;
     private final HouseholdRepository householdRepository;
+    private final LiabilityRepository liabilityRepository;
     private final ArthaProperties arthaProperties;
 
     public CashFlowService(IncomeRepository incomeRepository,
                            ExpenseRepository expenseRepository,
                            HouseholdRepository householdRepository,
+                           LiabilityRepository liabilityRepository,
                            ArthaProperties arthaProperties) {
         this.incomeRepository = incomeRepository;
         this.expenseRepository = expenseRepository;
         this.householdRepository = householdRepository;
+        this.liabilityRepository = liabilityRepository;
         this.arthaProperties = arthaProperties;
     }
 
@@ -123,8 +129,23 @@ public class CashFlowService {
                     .divide(grossIncome, rateScale, RoundingMode.HALF_UP);
         }
 
-        // Debt-service ratio: EMIs come in Batch 4. For now, it's 0.
-        BigDecimal debtServiceRatio = BigDecimal.ZERO.setScale(rateScale, RoundingMode.HALF_UP);
+        // Debt-service ratio: total active EMIs / gross income (FR-2.3, updated in Batch 4).
+        // This ratio tells how much of the household income goes to debt repayment.
+        // Healthy: < 20%.  Warning: 20-40%.  Critical: > 40%.
+        BigDecimal totalEmi = liabilityRepository
+                .findByHouseholdIdAndStatus(householdId, LiabilityStatus.ACTIVE)
+                .stream()
+                .map(Liability::getEmiAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal debtServiceRatio;
+        if (grossIncome.compareTo(BigDecimal.ZERO) == 0) {
+            debtServiceRatio = BigDecimal.ZERO.setScale(rateScale, RoundingMode.HALF_UP);
+        } else {
+            debtServiceRatio = totalEmi
+                    .multiply(BigDecimal.valueOf(100))
+                    .divide(grossIncome, rateScale, RoundingMode.HALF_UP);
+        }
 
         return new CashFlowStatement(
                 householdId,

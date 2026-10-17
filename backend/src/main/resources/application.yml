@@ -85,6 +85,8 @@ artha:
     encryption-key: ${PAN_ENCRYPTION_KEY:}
   # Stale data threshold in days (per NFR-2.2)
   stale-data-threshold-days: 90
+  # Emergency fund target months (per FR-5.2, SPEC-BINDING: EMERGENCY_FUND_MONTHS=6)
+  emergency-fund-months: 6
 
 # === Logging ===
 logging:

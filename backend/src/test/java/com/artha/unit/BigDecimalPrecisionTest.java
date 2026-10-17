@@ -5,6 +5,7 @@ import com.artha.domain.Frequency;
 import com.artha.repository.ExpenseRepository;
 import com.artha.repository.HouseholdRepository;
 import com.artha.repository.IncomeRepository;
+import com.artha.repository.LiabilityRepository;
 import com.artha.service.CashFlowService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -46,6 +47,8 @@ class BigDecimalPrecisionTest {
     private ExpenseRepository expenseRepository;
     @Mock
     private HouseholdRepository householdRepository;
+    @Mock
+    private LiabilityRepository liabilityRepository;
 
     private CashFlowService cashFlowService;
 
@@ -55,7 +58,7 @@ class BigDecimalPrecisionTest {
         props.setCurrencyScale(2);
         props.setRateScale(6);
         cashFlowService = new CashFlowService(incomeRepository, expenseRepository,
-                householdRepository, props);
+                householdRepository, liabilityRepository, props);
     }
 
     @Test
