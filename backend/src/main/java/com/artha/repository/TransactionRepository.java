@@ -11,4 +11,6 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID> 
     /** All transactions for a holding, ordered by date (for XIRR calculation). */
     List<Transaction> findByHoldingIdOrderByTransactionDateAsc(UUID holdingId);
     List<Transaction> findByOwnerId(UUID ownerId);
+    /** All transactions for a household (navigates holding → account → owner → household). */
+    List<Transaction> findByHoldingAccountOwnerHouseholdId(UUID householdId);
 }
