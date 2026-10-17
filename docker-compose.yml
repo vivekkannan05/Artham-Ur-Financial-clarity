@@ -1,0 +1,85 @@
+# ─────────────────────────────────────────────────────────────
+# Artha — Docker Compose (Development)
+#
+# Services:
+#   postgres  — PostgreSQL 16 (port 5432, localhost only)
+#   ollama    — Local LLM server (port 11434, internal only)
+#   backend   — Spring Boot API (port 8080, localhost only)
+#   frontend  — React app via Nginx (port 3000, localhost only)
+#
+# Usage:
+#   cp .env.example .env          # first time only
+#   docker compose up -d           # start all services
+#   docker compose logs -f backend # tail backend logs
+#   docker compose down            # stop all services
+# ─────────────────────────────────────────────────────────────
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-hfos}
+      POSTGRES_USER: ${POSTGRES_USER:-hfos}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-hfos_local}
+    volumes:
+      - hfos-pgdata:/var/lib/postgresql/data
+    networks:
+      - artha-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hfos"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+
+  ollama:
+    image: ollama/ollama
+    volumes:
+      - hfos-ollama-models:/root/.ollama
+    networks:
+      - artha-net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:11434/api/tags || exit 1"]
+      interval: 15s
+      retries: 5
+      start_period: 120s
+
+  backend:
+    build: ./backend
+    ports:
+      - "127.0.0.1:8080:8080"
+    env_file: .env
+    volumes:
+      - hfos-documents:/app/documents
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - artha-net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/actuator/health || exit 1"]
+      interval: 15s
+      retries: 3
+      start_period: 60s
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "127.0.0.1:3000:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - artha-net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:80 || exit 1"]
+      interval: 10s
+      retries: 3
+      start_period: 15s
+
+volumes:
+  hfos-pgdata:
+  hfos-ollama-models:
+  hfos-documents:
+
+networks:
+  artha-net:

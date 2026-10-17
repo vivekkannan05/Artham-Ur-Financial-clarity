@@ -1,0 +1,43 @@
+# ─────────────────────────────────────────────────────────────
+# Artha — Test Configuration
+#
+# This overrides application.yml when running tests.
+# Uses H2 in-memory database for fast unit tests.
+# Integration tests use Testcontainers (real PostgreSQL).
+# ─────────────────────────────────────────────────────────────
+
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+
+  jpa:
+    hibernate:
+      # For H2 tests: let Hibernate create tables from entities
+      # (Flyway migrations are PostgreSQL-specific SQL)
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+    show-sql: true
+
+  flyway:
+    # Disable Flyway for H2 tests — Hibernate ddl-auto handles schema
+    enabled: false
+
+# === Artha Custom Configuration (test defaults) ===
+artha:
+  currency-scale: 2
+  rate-scale: 6
+  cors:
+    allowed-origins: http://localhost:3000
+  pan:
+    encryption-key: test-key-for-unit-tests-only-32ch
+  stale-data-threshold-days: 90
+
+logging:
+  level:
+    root: WARN
+    com.artha: DEBUG

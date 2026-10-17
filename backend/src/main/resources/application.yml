@@ -1,0 +1,95 @@
+# ─────────────────────────────────────────────────────────────
+# Artha — Application Configuration
+#
+# Spring Boot reads this file automatically on startup.
+# YAML format is used instead of .properties for readability.
+#
+# Environment variables (from .env / Docker) override these
+# defaults using the ${VAR:-default} syntax.
+# ─────────────────────────────────────────────────────────────
+
+spring:
+  application:
+    name: artha
+
+  # === Database Connection ===
+  # In Docker: connects to the 'postgres' service
+  # Locally: override via environment variables or .env file
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/hfos}
+    username: ${SPRING_DATASOURCE_USERNAME:hfos}
+    password: ${SPRING_DATASOURCE_PASSWORD:hfos_local}
+    driver-class-name: org.postgresql.Driver
+
+  # === JPA / Hibernate ===
+  jpa:
+    # 'validate' means Hibernate checks that entities match the DB schema
+    # but does NOT create or modify tables — Flyway handles migrations.
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        # Format SQL in logs for readability during development
+        format_sql: true
+    # Show SQL queries in logs (helpful for learning, disable in production)
+    show-sql: false
+    open-in-view: false
+
+  # === Flyway Database Migrations ===
+  # Flyway runs SQL files from src/main/resources/db/migration/
+  # Files are named: V1__description.sql, V2__description.sql, etc.
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+  # === Jackson JSON Serialization ===
+  jackson:
+    # Dates serialize as "2024-01-15" not as timestamps
+    serialization:
+      write-dates-as-timestamps: false
+    # Ignore unknown fields in request bodies (forward-compatible)
+    deserialization:
+      fail-on-unknown-properties: false
+
+# === Server Configuration ===
+server:
+  port: 8080
+  error:
+    # Include field-level validation errors in error responses
+    include-binding-errors: always
+    include-message: always
+
+# === Actuator (Health Checks) ===
+# Docker Compose uses /actuator/health to verify the backend is ready
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
+# === Artha Custom Configuration ===
+# These map to spec config variables (SPEC-BINDING markers)
+artha:
+  # BigDecimal precision scales (per NFR-1.2)
+  currency-scale: 2
+  rate-scale: 6
+  # CORS (per NFR-8.2)
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000}
+  # PAN encryption (per FR-1.2, Review S-7)
+  pan:
+    encryption-key: ${PAN_ENCRYPTION_KEY:}
+  # Stale data threshold in days (per NFR-2.2)
+  stale-data-threshold-days: 90
+
+# === Logging ===
+logging:
+  level:
+    root: ${LOG_LEVEL:INFO}
+    com.artha: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE

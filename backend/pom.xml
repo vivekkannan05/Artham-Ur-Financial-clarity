@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Artha — Backend (Spring Boot 3.x + Java 21)
+
+    HOW TO BUILD:
+      cd backend
+      ./mvnw clean package              # compile + run all tests + create JAR
+      ./mvnw clean package -DskipTests  # compile only (skip tests)
+
+    HOW TO RUN LOCALLY (without Docker):
+      ./mvnw spring-boot:run
+
+    HOW TO RUN TESTS:
+      ./mvnw test                       # unit tests only
+      ./mvnw verify                     # unit + integration tests
+
+    The Maven Wrapper (mvnw) is included so you don't need Maven installed globally.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- ═══════════════════════════════════════════════════════
+         Parent POM: Spring Boot manages dependency versions
+         so we don't have to specify versions for most libraries.
+         ═══════════════════════════════════════════════════════ -->
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.4.1</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>com.artha</groupId>
+    <artifactId>artha-backend</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+    <name>Artha Backend</name>
+    <description>Household Financial Operating System — Backend API</description>
+
+    <properties>
+        <!-- Java 21 LTS (per spec) -->
+        <java.version>21</java.version>
+        <!-- Testcontainers version for integration tests -->
+        <testcontainers.version>1.20.4</testcontainers.version>
+    </properties>
+
+    <dependencies>
+        <!-- ═══════════════════════════════════════════
+             CORE: Web + REST API
+             Provides: Spring MVC, embedded Tomcat,
+             Jackson JSON serialization, @RestController
+             ═══════════════════════════════════════════ -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!-- ═══════════════════════════════════════════
+             DATA: JPA + Hibernate + Spring Data
+             Provides: @Entity, JpaRepository, @Transactional,
+             automatic query generation from method names
+             ═══════════════════════════════════════════ -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+
+        <!-- ═══════════════════════════════════════════
+             VALIDATION: Bean Validation (Jakarta)
+             Provides: @NotNull, @NotBlank, @Size, @Valid
+             for request DTO validation
+             ═══════════════════════════════════════════ -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+
+        <!-- ═══════════════════════════════════════════
+             OPS: Actuator (health checks, metrics)
+             Provides: /actuator/health endpoint used by
+             Docker Compose health checks
+             ═══════════════════════════════════════════ -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
+        <!-- ═══════════════════════════════════════════
+             DATABASE: PostgreSQL JDBC Driver
+             Required by JPA to connect to PostgreSQL
+             ═══════════════════════════════════════════ -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- ═══════════════════════════════════════════
+             MIGRATIONS: Flyway
+             Manages database schema changes as versioned
+             SQL files (V1__init.sql, V2__add_accounts.sql).
+             Spring Boot auto-runs migrations on startup.
+             ═══════════════════════════════════════════ -->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-database-postgresql</artifactId>
+        </dependency>
+
+        <!-- ═══════════════════════════════════════════
+             TEST: Spring Boot Test + JUnit 5
+             Provides: @SpringBootTest, MockMvc,
+             @WebMvcTest, @DataJpaTest
+             ═══════════════════════════════════════════ -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- ═══════════════════════════════════════════
+             TEST: Testcontainers (PostgreSQL)
+             Spins up a real PostgreSQL in Docker for
+             integration tests — no mocking the database.
+             ═══════════════════════════════════════════ -->
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>${testcontainers.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>${testcontainers.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- ═══════════════════════════════════════════
+             TEST: H2 Database (in-memory)
+             Used for fast unit tests that need JPA
+             but don't need a full PostgreSQL instance
+             ═══════════════════════════════════════════ -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- Creates executable JAR with embedded Tomcat -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
