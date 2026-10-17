@@ -206,11 +206,25 @@ public class HealthScoreService {
     }
 
     /**
-     * (g) Tax readiness: placeholder — full implementation in future.
+     * (g) Tax readiness: based on tax flag count from TaxService.
+     * 0 flags → 90 (good); 1 flag → 60; 2+ flags → 30 (needs attention).
      */
     SubScore computeTaxReadiness(HouseholdFinancialContext context) {
-        return new SubScore("Tax Readiness", new BigDecimal("70"), "Green",
-                "Basic tax tracking active — advanced analysis coming soon");
+        int flagCount = context.taxFlagCount();
+        BigDecimal score;
+        String explanation;
+
+        if (flagCount == 0) {
+            score = new BigDecimal("90");
+            explanation = "No tax flags detected — tax position looks clean";
+        } else if (flagCount == 1) {
+            score = new BigDecimal("60");
+            explanation = String.format("%d tax flag detected — review recommended", flagCount);
+        } else {
+            score = new BigDecimal("30");
+            explanation = String.format("%d tax flags detected — needs attention", flagCount);
+        }
+        return new SubScore("Tax Readiness", score, statusFromScore(score), explanation);
     }
 
     // ─── Helper ──────────────────────────────────────────────

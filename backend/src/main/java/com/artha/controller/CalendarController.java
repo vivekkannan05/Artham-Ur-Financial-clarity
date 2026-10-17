@@ -6,6 +6,7 @@ import com.artha.domain.Household;
 import com.artha.domain.Recurrence;
 import com.artha.repository.CalendarEventRepository;
 import com.artha.repository.HouseholdRepository;
+import com.artha.service.CalendarService;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,11 +22,14 @@ public class CalendarController {
 
     private final CalendarEventRepository eventRepository;
     private final HouseholdRepository householdRepository;
+    private final CalendarService calendarService;
 
     public CalendarController(CalendarEventRepository eventRepository,
-                              HouseholdRepository householdRepository) {
+                              HouseholdRepository householdRepository,
+                              CalendarService calendarService) {
         this.eventRepository = eventRepository;
         this.householdRepository = householdRepository;
+        this.calendarService = calendarService;
     }
 
     @PostMapping("/api/households/{householdId}/calendar")
@@ -75,5 +79,15 @@ public class CalendarController {
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         eventRepository.deleteById(id);
         return ResponseEntity.noContent().build();
+    }
+
+    /** Auto-populate calendar from SIP/EMI/renewal/goal data (FR-7.4). */
+    @PostMapping("/api/households/{householdId}/calendar/auto-populate")
+    public ResponseEntity<Map<String, Object>> autoPopulate(@PathVariable UUID householdId) {
+        int created = calendarService.autoPopulate(householdId);
+        return ResponseEntity.ok(Map.of(
+                "eventsCreated", created,
+                "message", String.format("Auto-populated %d calendar events", created)
+        ));
     }
 }

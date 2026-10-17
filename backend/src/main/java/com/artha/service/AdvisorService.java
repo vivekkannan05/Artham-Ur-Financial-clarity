@@ -11,6 +11,7 @@ import com.artha.engine.NetWorthEngine.HoldingValue;
 import com.artha.engine.NetWorthEngine.LiabilityValue;
 import com.artha.engine.NetWorthEngine.NetWorthResult;
 import com.artha.repository.*;
+import com.artha.advisor.ai.AiExplainerService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
@@ -28,7 +29,7 @@ import java.util.stream.Collectors;
  * PIPELINE:
  *   1. Build HouseholdFinancialContext (one DB round-trip)
  *   2. Evaluate all rules against context (sorted by priority)
- *   3. AI explanation (Phase 1: fallback to rule text — Ollama integration future)
+ *   3. AI explanation via AiExplainerService (Phase 1: rule-text fallback)
  *   4. Store as Recommendation entities
  *
  * Design Doc Sec 9.2: "If all rules pass, say 'do nothing'."
@@ -42,6 +43,8 @@ public class AdvisorService {
     private final GoalService goalService;
     private final NetWorthService netWorthService;
     private final InsuranceService insuranceService;
+    private final TaxService taxService;
+    private final AiExplainerService aiExplainerService;
     private final HoldingRepository holdingRepository;
     private final LiabilityRepository liabilityRepository;
     private final HouseholdRepository householdRepository;
@@ -54,6 +57,8 @@ public class AdvisorService {
                           GoalService goalService,
                           NetWorthService netWorthService,
                           InsuranceService insuranceService,
+                          TaxService taxService,
+                          AiExplainerService aiExplainerService,
                           HoldingRepository holdingRepository,
                           LiabilityRepository liabilityRepository,
                           HouseholdRepository householdRepository,
@@ -67,6 +72,8 @@ public class AdvisorService {
         this.goalService = goalService;
         this.netWorthService = netWorthService;
         this.insuranceService = insuranceService;
+        this.taxService = taxService;
+        this.aiExplainerService = aiExplainerService;
         this.holdingRepository = holdingRepository;
         this.liabilityRepository = liabilityRepository;
         this.householdRepository = householdRepository;
@@ -114,6 +121,7 @@ public class AdvisorService {
             rec.setAction(r.action());
             rec.setExpectedImpact(r.expectedImpact());
             rec.setDownsideRisk(r.downsideRisk());
+            rec.setAiExplanation(aiExplainerService.explainSingle(r));
             rec.setSpecVersion("SPEC-v1.1");
             rec.setStatus(RecommendationStatus.PENDING);
             recommendationRepository.save(rec);
@@ -160,6 +168,9 @@ public class AdvisorService {
         // Insurance gaps
         CoverageAnalysis coverage = insuranceService.analyzeCoverageGaps(householdId);
 
+        // Tax flags
+        int taxFlagCount = taxService.scanForFlags(householdId).size();
+
         return new HouseholdFinancialContext(
                 householdId,
                 household.getName(),
@@ -173,7 +184,8 @@ public class AdvisorService {
                 nw.netWorth(),
                 nw.assetsByClass(),
                 coverage.gaps(),
-                cashFlow.debtServiceRatio()
+                cashFlow.debtServiceRatio(),
+                taxFlagCount
         );
     }
 

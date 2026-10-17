@@ -111,12 +111,45 @@ class HealthScoreServiceTest {
         assertEquals("Red", HealthScoreService.statusFromScore(BigDecimal.ZERO));
     }
 
+    @Test
+    @DisplayName("Tax readiness: 0 flags → 90, 1 flag → 60, 2+ flags → 30")
+    void testTaxReadinessWired() {
+        // 0 flags → 90
+        var ctx0 = buildFixtureContextWithTax(
+                new BigDecimal("20"), BigDecimal.ZERO, new BigDecimal("8"),
+                new BigDecimal("85"), Map.of("EQUITY", new BigDecimal("1000000")), 0, 0);
+        SubScore tax0 = findByCategory(service.compute(ctx0), "Tax Readiness");
+        assertEquals(new BigDecimal("90"), tax0.score());
+
+        // 1 flag → 60
+        var ctx1 = buildFixtureContextWithTax(
+                new BigDecimal("20"), BigDecimal.ZERO, new BigDecimal("8"),
+                new BigDecimal("85"), Map.of("EQUITY", new BigDecimal("1000000")), 0, 1);
+        SubScore tax1 = findByCategory(service.compute(ctx1), "Tax Readiness");
+        assertEquals(new BigDecimal("60"), tax1.score());
+
+        // 3 flags → 30
+        var ctx3 = buildFixtureContextWithTax(
+                new BigDecimal("20"), BigDecimal.ZERO, new BigDecimal("8"),
+                new BigDecimal("85"), Map.of("EQUITY", new BigDecimal("1000000")), 0, 3);
+        SubScore tax3 = findByCategory(service.compute(ctx3), "Tax Readiness");
+        assertEquals(new BigDecimal("30"), tax3.score());
+    }
+
     // ─── Fixture builders ────────────────────────────────────
 
     private HouseholdFinancialContext buildFixtureContext(
             BigDecimal savingsRate, BigDecimal dsr, BigDecimal emergencyMonths,
             BigDecimal goalFundingPct, Map<String, BigDecimal> assetsByClass,
             int insuranceGapCount) {
+        return buildFixtureContextWithTax(savingsRate, dsr, emergencyMonths,
+                goalFundingPct, assetsByClass, insuranceGapCount, 0);
+    }
+
+    private HouseholdFinancialContext buildFixtureContextWithTax(
+            BigDecimal savingsRate, BigDecimal dsr, BigDecimal emergencyMonths,
+            BigDecimal goalFundingPct, Map<String, BigDecimal> assetsByClass,
+            int insuranceGapCount, int taxFlagCount) {
 
         CashFlowStatement cashFlow = new CashFlowStatement(
                 UUID.randomUUID(),
@@ -152,7 +185,7 @@ class HealthScoreServiceTest {
                 UUID.randomUUID(), "Test Household", 2,
                 cashFlow, List.of(gp), List.of("Retirement"),
                 ef, totalAssets, BigDecimal.ZERO, totalAssets,
-                assetsByClass, gaps, dsr);
+                assetsByClass, gaps, dsr, taxFlagCount);
     }
 
     private SubScore findByCategory(HealthScore score, String category) {

@@ -46,5 +46,8 @@ public record HouseholdFinancialContext(
         List<InsuranceCoverageGap> insuranceGaps,
 
         // Debt
-        BigDecimal debtServiceRatio
+        BigDecimal debtServiceRatio,
+
+        // Tax flags count (from TaxService — used by health score)
+        int taxFlagCount
 ) {}

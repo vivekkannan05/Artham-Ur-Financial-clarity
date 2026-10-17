@@ -4,24 +4,29 @@ import com.artha.advisor.RuleResult;
 import com.artha.dto.HealthScore;
 import com.artha.service.AdvisorService;
 import com.artha.service.HealthScoreService;
+import com.artha.service.StaleDataService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
 /**
- * REST controller for the Advisor engine and Health Score.
- * SPEC REF: FR-7.1, FR-7.3
+ * REST controller for the Advisor engine, Health Score, and Data Quality.
+ * SPEC REF: FR-7.1, FR-7.3, FR-7.7
  */
 @RestController
 public class AdvisorController {
 
     private final AdvisorService advisorService;
     private final HealthScoreService healthScoreService;
+    private final StaleDataService staleDataService;
 
-    public AdvisorController(AdvisorService advisorService, HealthScoreService healthScoreService) {
+    public AdvisorController(AdvisorService advisorService,
+                             HealthScoreService healthScoreService,
+                             StaleDataService staleDataService) {
         this.advisorService = advisorService;
         this.healthScoreService = healthScoreService;
+        this.staleDataService = staleDataService;
     }
 
     /** Run the advisor pipeline (calc → rules → recommendations). */
@@ -41,5 +46,12 @@ public class AdvisorController {
     public ResponseEntity<HealthScore> healthScore(@PathVariable UUID householdId) {
         var context = advisorService.buildContext(householdId);
         return ResponseEntity.ok(healthScoreService.compute(context));
+    }
+
+    /** Stale data detection — holdings not updated in > 90 days (FR-7.7). */
+    @GetMapping("/api/households/{householdId}/stale-data")
+    public ResponseEntity<List<StaleDataService.StaleRecord>> staleData(
+            @PathVariable UUID householdId) {
+        return ResponseEntity.ok(staleDataService.findStaleHoldings(householdId));
     }
 }
